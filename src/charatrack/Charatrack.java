@@ -28,7 +28,7 @@ public class Charatrack extends JFrame implements ActionListener {
 	private JButton load;
 	private JButton about;
 	static boolean charExists;
-	static String CharaVer = "2022156"; 
+	static String CharaVer = "2022615"; 
 	
 	public Charatrack() {
 		
