@@ -1,4 +1,4 @@
 # Charatrack
- Character planner and activity tracker for creative writing.
+ Character activity tracker for creative writing.
 
 Licensed under GNU GPLv3.
