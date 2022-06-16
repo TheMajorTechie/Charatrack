@@ -10,15 +10,17 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+@SuppressWarnings("serial")
 public class LoadWindow extends JFrame implements ActionListener {
 	
 	private JButton loadButton;
 	private JTextField loadCharNameField;
 
+	/**
+	 * This window has literally one purpose. ask for a name to load in, take the input, and yeet it back over to the main method.
+	 */
 	public LoadWindow() {
 		super("Load character");
 		setResizable(false);
@@ -42,6 +44,7 @@ public class LoadWindow extends JFrame implements ActionListener {
 		mainPanel.add(appLabel, gridConstraint);
 		
 		loadCharNameField = new JTextField("Character Name",25);
+		loadCharNameField.addActionListener(this);
 		gridConstraint.gridx = 0;
 		gridConstraint.gridy = 1;
 		gridConstraint.gridwidth = 2;
@@ -60,11 +63,20 @@ public class LoadWindow extends JFrame implements ActionListener {
 		
 	}
 
+	/**
+	 * Give the user two ways to send text back over for loading.
+	 * Invokes the loadCharacter method back in the main class because that way I don't have to do any fancy
+	 * logic to have the main class wait for input to finish.
+	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
+		if(e.getSource() == loadCharNameField) {
+			Charatrack.charNameField.setText(loadCharNameField.getText());
+			Charatrack.loadCharacter();
+			dispose();
+		}
+		
 		if(e.getSource() == loadButton) {
-			Charatrack.charExists = true;
 			Charatrack.charNameField.setText(loadCharNameField.getText());
 			Charatrack.loadCharacter();
 			dispose();

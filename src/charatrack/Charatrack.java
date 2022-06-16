@@ -3,20 +3,16 @@ package charatrack;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
-import java.nio.file.Files;
-
-import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 
+@SuppressWarnings("serial")
 public class Charatrack extends JFrame implements ActionListener {
 	
+	//saves the current path of the program in memory and appends on a program data directory to make Charatrack portable.
 	public static final String baseDir = getProgramPath() + "\\CharaTrack\\";
 	public static String workingDir = baseDir;
 	
@@ -27,8 +23,7 @@ public class Charatrack extends JFrame implements ActionListener {
 	private JButton save;
 	private JButton load;
 	private JButton about;
-	static boolean charExists;
-	static String CharaVer = "2022615"; 
+	static String CharaVer = "2022616"; 	//because version numbering systems are confusing. let's just use the date of compilation.
 	
 	public Charatrack() {
 		
@@ -70,7 +65,7 @@ public class Charatrack extends JFrame implements ActionListener {
 		gridConstraint.gridy = 0;
 		gridConstraint.gridwidth = 2;
 		
-		//make buttons
+		//make buttons that go on the panel
 		save = new JButton("Save");
 		save.addActionListener(this);
 		gridConstraint.gridx = 0;
@@ -94,7 +89,7 @@ public class Charatrack extends JFrame implements ActionListener {
 		
 		mainPanel.add(menuPanel, gridConstraint);
 		
-	//create labels
+	//create labels for the three panels
 		JLabel invLabel = new JLabel("Inventory");
 		gridConstraint.gridx = 0;
 		gridConstraint.gridy = 1;
@@ -112,9 +107,8 @@ public class Charatrack extends JFrame implements ActionListener {
 		gridConstraint.gridy = 1;
 		gridConstraint.gridwidth = 2;
 		mainPanel.add(memLabel, gridConstraint);
-	
-	//create character inventory panel
 		
+	//create character inventory panel
 		charInventory = new JTextArea("Character Inventory", 25,15);
 		charInventory.setLineWrap(false);
 		
@@ -126,7 +120,6 @@ public class Charatrack extends JFrame implements ActionListener {
 		mainPanel.add(charInvBox, gridConstraint);
 		
 	//create character location history panel
-		
 		charLocHistory = new JTextArea("Character Location History", 25,15);
 		charLocHistory.setLineWrap(false);
 		
@@ -138,7 +131,6 @@ public class Charatrack extends JFrame implements ActionListener {
 		mainPanel.add(charLocHistBox, gridConstraint);
 		
 	//create character knowledge history panel
-			
 		charKnowHistory = new JTextArea("Character Knowledge History", 25,15);
 		charKnowHistory.setLineWrap(false);
 		JScrollPane charKnowHistBox = new JScrollPane(charKnowHistory);
@@ -152,64 +144,31 @@ public class Charatrack extends JFrame implements ActionListener {
 		this.pack();
 	}
 	
+	/**
+	 * puny main method does one thing and one thing only
+	 * @param args
+	 * @throws IOException
+	 */
 	public static void main(String[] args) throws IOException {
 		Charatrack app = new Charatrack();
 		setupDir();
 		app.setVisible(true);
 	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) { 
-		if(e.getSource() == save) {
-			System.out.println("Character name is " + "\"" + charNameField.getText() + "\"");
-			System.out.println("\"" + charNameField.getText() + "'s" + "\" " + "inventory: " + charInventory.getText());
-			System.out.println("\"" + charNameField.getText() + "'s" + "\" " + "location history: " + charLocHistory.getText());
-			System.out.println("\"" + charNameField.getText() + "'s" + "\" " + "knowledge history: " + charKnowHistory.getText());
-			
-			Character Char = new Character(charNameField.getText());
-			Char.setInventory(charInventory.getText());
-			Char.setLocHist(charLocHistory.getText());
-			Char.setMemory(charKnowHistory.getText());
-			
-			workingDir = workingDir + charNameField.getText();	//change working directory to the character directory
-			
-			try {
-				setupCharDir();
-			} catch (IOException e1) {
-				System.out.println("Unable to generate new directory!");
-				e1.printStackTrace();
-			}
-			
-			workingDir = baseDir;	//makes sure to reset the base directory because holy frick not doing this starts stacking stuff bad
-			
-			Char.writeToFiles();
-			//save protection to keep things from being overwritten on accident
-//			if(charExists = false) {
-//				Char.writeToFiles();
-//				System.out.println("Files saved");
-//			}
-//			else {
-//				System.out.println("No files saved");
-//			}
-		}
-		
-		if(e.getSource() == load) {
-			LoadWindow load = new LoadWindow();
-			load.setVisible(true);
-		}
-		if(e.getSource() == about) {
-			AboutWindow about = new AboutWindow();
-			about.setVisible(true);
-		}
-	}
 	
+	/**
+	 * Small helper method that just grabs the current path of the program.
+	 * @return
+	 */
 	public static String getProgramPath() {
 		String programDir = System.getProperty("user.dir");
 		return programDir;
 	}
 	
-	public static void setupDir() throws IOException {	
-		
+	/**
+	 * Another helper method that creates the associated CharaTrack directory 
+	 * @throws IOException
+	 */
+	public static void setupDir() throws IOException {		
 		System.out.println("\"" + workingDir + "\" " + "is the program's current working directory.");
 		
 		File tempDirectory = new File(workingDir);
@@ -220,8 +179,12 @@ public class Charatrack extends JFrame implements ActionListener {
 		
 	}
 	
+	/**
+	 * Yet another helper method that does the work in making a character's directory. Probably can combine this in with the plain
+	 * setupDir() method but i'm keeping it separate since i plan on having an overwrite file dialogue box open if a character already exists. 
+	 * @throws IOException
+	 */
 	public static void setupCharDir() throws IOException {	
-		
 		System.out.println("\"" + workingDir + "\" " + "is the program's current working directory.");
 		
 		File tempDirectory = new File(workingDir);
@@ -237,23 +200,71 @@ public class Charatrack extends JFrame implements ActionListener {
 		
 	}
 
+	/**
+	 * calls the main logic for loading in a character.
+	 */
 	public static void loadCharacter() {
-		// TODO Auto-generated method stub
-		workingDir = workingDir + charNameField.getText();
+		workingDir = workingDir + charNameField.getText();												//set working directory to whatever the heck LoadWindow has set charNameField to
 		System.out.println("\"" + workingDir + "\" " + "is the program's current working directory.");
 		
 		File tempDirectory = new File(workingDir);
 		if( !tempDirectory.exists() && !tempDirectory.isDirectory() ) { 
-			//do nothing
+			//do nothing. will probably eventually show a dialogue box telling the user that the character doesn't exist.
+			workingDir = baseDir;	//reset working directory or else the program gets stuck in a loop and is unable to load new characters anymore
 		}	
 		else {
 			System.out.println("Character found! Now loading data...");
 			Character Char = new Character(charNameField.getText());
+			
+			//invokes the logic to start reading stuff in. also sets the text boxes to whatever has been loaded.
 			Char.readFromFiles();
 			charInventory.setText(Char.getInventory());
 			charLocHistory.setText(Char.getLocHist());
 			charKnowHistory.setText(Char.getMemory());
-			workingDir = baseDir;	//reset working directory again
+			workingDir = baseDir;	//reset working directory again in case if loading/saving is needed to be done again.
+		}
+	}
+	
+	/**
+	 * the big brain logic of the program. works with the text fields and buttons.
+	 */
+	@Override
+	public void actionPerformed(ActionEvent e) { 
+		if(e.getSource() == save) {
+			//debug code that'll dump text into the console. i have yet to set up any JUnit tests.
+//			System.out.println("Character name is " + "\"" + charNameField.getText() + "\"");
+//			System.out.println("\"" + charNameField.getText() + "'s" + "\" " + "inventory: " + charInventory.getText());
+//			System.out.println("\"" + charNameField.getText() + "'s" + "\" " + "location history: " + charLocHistory.getText());
+//			System.out.println("\"" + charNameField.getText() + "'s" + "\" " + "knowledge history: " + charKnowHistory.getText());
+			
+			//set up a new character in preparation for saving. autosaving will eventually be a thing btw.
+			Character Char = new Character(charNameField.getText());
+			Char.setInventory(charInventory.getText());
+			Char.setLocHist(charLocHistory.getText());
+			Char.setMemory(charKnowHistory.getText());
+			
+			workingDir = workingDir + charNameField.getText();	//change working directory to the character directory
+			
+			//try to create a new directory for the character to be saved in.
+			try {
+				setupCharDir();
+			} catch (IOException e1) {
+				System.out.println("Unable to generate new directory!");
+				e1.printStackTrace();
+			}
+			
+			workingDir = baseDir;	//makes sure to reset the base directory because holy frick not doing this starts stacking stuff bad
+			
+			Char.writeToFiles();
+		}
+		
+		if(e.getSource() == load) {
+			LoadWindow load = new LoadWindow();
+			load.setVisible(true);
+		}
+		if(e.getSource() == about) {
+			AboutWindow about = new AboutWindow();
+			about.setVisible(true);
 		}
 	}
 

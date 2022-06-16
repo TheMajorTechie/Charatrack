@@ -10,9 +10,8 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 
+@SuppressWarnings("serial")
 public class WarningWindow extends JFrame implements ActionListener {
 	
 	private JButton yesSave;
@@ -63,11 +62,11 @@ public class WarningWindow extends JFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
 		if(e.getSource() == yesSave) {
-			Charatrack.charExists = false;
+//			Charatrack.charExists = false;
 			dispose();
 		}
 		if(e.getSource() == noSave) {
-			Charatrack.charExists = true;
+//			Charatrack.charExists = true;
 			dispose();
 		}
 	}
