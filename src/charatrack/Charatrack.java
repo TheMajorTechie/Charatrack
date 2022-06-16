@@ -8,6 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -15,19 +17,24 @@ import javax.swing.border.TitledBorder;
 
 public class Charatrack extends JFrame implements ActionListener {
 	
-	private JTextField charNameField;
-	private JTextArea charPhysDesc;
-	private JTextArea charInventory;
+	public static final String baseDir = getProgramPath() + "\\CharaTrack\\";
+	public static String workingDir = baseDir;
+	
+	static JTextField charNameField;
+	static JTextArea charInventory;
+	static JTextArea charLocHistory;
+	static JTextArea charKnowHistory;
 	private JButton save;
 	private JButton load;
 	private JButton about;
-	private JButton addItem;
+	static boolean charExists;
+	static String CharaVer = "2022156"; 
 	
 	public Charatrack() {
 		
 	//build main window
-		super("Charatrack");
-		setResizable(true);
+		super("Charatrack " + CharaVer);
+		setResizable(false);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		JPanel mainWindow = new JPanel();
 		this.setContentPane(mainWindow);
@@ -41,164 +48,212 @@ public class Charatrack extends JFrame implements ActionListener {
 		mainPanel.setLayout(mainGrid);
 		mainWindow.add(mainPanel, gridConstraint);
 		
+	//create app label
+		JLabel appLabel = new JLabel("Charatrack Character Tracker, " + CharaVer);
+		gridConstraint.gridx = 0;
+		gridConstraint.gridy = 0;
+		gridConstraint.gridwidth = 2;
+		mainPanel.add(appLabel, gridConstraint);
 		
-	//create menu panel ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	//create character name box 
+		charNameField = new JTextField("Character Name",25);
+		gridConstraint.gridx = 2;
+		gridConstraint.gridy = 0;
+		gridConstraint.gridwidth = 2;
+		mainPanel.add(charNameField, gridConstraint);
+		
+	//create menu panel
 		JPanel menuPanel = new JPanel();
 		GridBagLayout menuGrid = new GridBagLayout();
 		menuPanel.setLayout(menuGrid);
-		gridConstraint.gridx = 0;
+		gridConstraint.gridx = 4;
 		gridConstraint.gridy = 0;
-		gridConstraint.gridwidth = 1;
+		gridConstraint.gridwidth = 2;
 		
 		//make buttons
 		save = new JButton("Save");
 		save.addActionListener(this);
 		gridConstraint.gridx = 0;
 		gridConstraint.gridy = 0;
+		gridConstraint.gridwidth = 2;
 		menuPanel.add(save, gridConstraint);
 		
 		load = new JButton("Load");
 		load.addActionListener(this);
-		gridConstraint.gridx = 1;
+		gridConstraint.gridx = 2;
 		gridConstraint.gridy = 0;
+		gridConstraint.gridwidth = 2;
 		menuPanel.add(load, gridConstraint);
 		
 		about = new JButton("About");
 		about.addActionListener(this);
-		gridConstraint.gridx = 2;
+		gridConstraint.gridx = 4;
 		gridConstraint.gridy = 0;
+		gridConstraint.gridwidth = 2;
 		menuPanel.add(about, gridConstraint);
 		
 		mainPanel.add(menuPanel, gridConstraint);
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		
-	//create character name box ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		charNameField = new JTextField("Character Name (hit enter to save)",25);
-		charNameField.addActionListener(this);
+	//create labels
+		JLabel invLabel = new JLabel("Inventory");
 		gridConstraint.gridx = 0;
 		gridConstraint.gridy = 1;
-		gridConstraint.gridwidth = 3;
-		mainPanel.add(charNameField, gridConstraint);
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		gridConstraint.gridwidth = 2;
+		mainPanel.add(invLabel, gridConstraint);
 		
-	//create character physical description field~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		charPhysDesc = new JTextArea("Character Physical Description",25,50);
-		charPhysDesc.setLineWrap(true);
-		charPhysDesc.setWrapStyleWord(true);
-	//now make it scrollable
-			JScrollPane physDescBox = new JScrollPane(charPhysDesc);
-			physDescBox.setPreferredSize(new Dimension(275,300));
-			gridConstraint.gridx = 0;
-			gridConstraint.gridy = 2;
-			gridConstraint.gridwidth = 3;
-			
-			mainPanel.add(physDescBox, gridConstraint);
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		JPanel imagePanel = new JPanel();
-		GridBagLayout imageGrid = new GridBagLayout();
-		imagePanel.setLayout(imageGrid);
+		JLabel locLabel = new JLabel("Location History");
+		gridConstraint.gridx = 2;
+		gridConstraint.gridy = 1;
+		gridConstraint.gridwidth = 2;
+		mainPanel.add(locLabel, gridConstraint);
 		
-		JLabel imageLabelTemp = new JLabel("Placeholder image label (replace with image)");
-		gridConstraint.gridx = 0;
-		gridConstraint.gridy = 0;
-		imagePanel.add(imageLabelTemp, gridConstraint);
-		
+		JLabel memLabel = new JLabel("Knowledge History");
 		gridConstraint.gridx = 4;
-		gridConstraint.gridy = 0;
-		gridConstraint.gridwidth = 1;
-		
-		mainPanel.add(imagePanel, gridConstraint);
-		
-		
-		
+		gridConstraint.gridy = 1;
+		gridConstraint.gridwidth = 2;
+		mainPanel.add(memLabel, gridConstraint);
+	
 	//create character inventory panel
-		JPanel invPanel = new JPanel();
-		GridBagLayout invGrid = new GridBagLayout();
-		invPanel.setLayout(invGrid);
 		
+		charInventory = new JTextArea("Character Inventory", 25,15);
+		charInventory.setLineWrap(false);
 		
+		JScrollPane charInvBox = new JScrollPane(charInventory);
+		charInvBox.setPreferredSize(new Dimension(275,300));
+		gridConstraint.gridx = 0;
+		gridConstraint.gridy = 2;
+		gridConstraint.gridwidth = 2;
+		mainPanel.add(charInvBox, gridConstraint);
 		
-			JLabel itemLabel = new JLabel("         Item         ");
-			gridConstraint.gridx = 0;
-			gridConstraint.gridy = 0;
-			invPanel.add(itemLabel, gridConstraint);
+	//create character location history panel
+		
+		charLocHistory = new JTextArea("Character Location History", 25,15);
+		charLocHistory.setLineWrap(false);
+		
+		JScrollPane charLocHistBox = new JScrollPane(charLocHistory);
+		charLocHistBox.setPreferredSize(new Dimension(275,300));
+		gridConstraint.gridx = 2;
+		gridConstraint.gridy = 2;
+		gridConstraint.gridwidth = 2;
+		mainPanel.add(charLocHistBox, gridConstraint);
+		
+	//create character knowledge history panel
 			
-			JLabel itemCountLabel = new JLabel("         Count         ");
-			gridConstraint.gridx = 1;
-			gridConstraint.gridy = 0;
-			invPanel.add(itemCountLabel, gridConstraint);
-			
-			JLabel itemNotesLabel = new JLabel("         Notes         ");
-			gridConstraint.gridx = 2;
-			gridConstraint.gridy = 0;
-			invPanel.add(itemNotesLabel, gridConstraint);
-			
-			JTextField item = new JTextField("test item",10);
-			gridConstraint.gridx = 0;
-			gridConstraint.gridy = 1;
-			gridConstraint.gridwidth = 1;
-			invPanel.add(item, gridConstraint);
-			
-			JTextField itemDesc = new JTextField("test item description",10);
-			gridConstraint.gridx = 1;
-			gridConstraint.gridy = 1;
-			gridConstraint.gridwidth = 1;
-			invPanel.add(itemDesc, gridConstraint);
-			
-			JTextField itemNotes = new JTextField("test item notes",10);
-			gridConstraint.gridx = 2;
-			gridConstraint.gridy = 1;
-			gridConstraint.gridwidth = 1;
-			invPanel.add(itemNotes, gridConstraint);
-			
-			addItem = new JButton("Add item to inventory");
-			gridConstraint.gridx = 0;
-			gridConstraint.gridy = 2;
-			gridConstraint.gridwidth = 1;
-			addItem.addActionListener(this);
-			invPanel.add(addItem, gridConstraint);
-			
-			JButton removeItem = new JButton("Remove item from inventory");
-			gridConstraint.gridx = 1;
-			gridConstraint.gridy = 2;
-			gridConstraint.gridwidth = 1;
-			invPanel.add(removeItem, gridConstraint);
-			
-			JButton editItem = new JButton("Edit item");
-			gridConstraint.gridx = 2;
-			gridConstraint.gridy = 2;
-			gridConstraint.gridwidth = 1;
-			invPanel.add(editItem, gridConstraint);
-			
+		charKnowHistory = new JTextArea("Character Knowledge History", 25,15);
+		charKnowHistory.setLineWrap(false);
+		JScrollPane charKnowHistBox = new JScrollPane(charKnowHistory);
+		charKnowHistBox.setPreferredSize(new Dimension(275,300));
 		gridConstraint.gridx = 4;
-		gridConstraint.gridy = 1;
-		gridConstraint.gridwidth = 1;
+		gridConstraint.gridy = 2;
+		gridConstraint.gridwidth = 2;
 		
-		mainPanel.add(invPanel, gridConstraint);
+		mainPanel.add(charKnowHistBox, gridConstraint);
 		
 		this.pack();
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		Charatrack app = new Charatrack();
+		setupDir();
 		app.setVisible(true);
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		if(e.getSource() == charNameField) {
-			System.out.println("Character name is " + "\"" + charNameField.getText() + "\"");
-		}
-		
+	public void actionPerformed(ActionEvent e) { 
 		if(e.getSource() == save) {
 			System.out.println("Character name is " + "\"" + charNameField.getText() + "\"");
-			System.out.println("Character physical description is " + "\"" + charPhysDesc.getText() + "\"");
-		}
-		if(e.getSource() == load) {
+			System.out.println("\"" + charNameField.getText() + "'s" + "\" " + "inventory: " + charInventory.getText());
+			System.out.println("\"" + charNameField.getText() + "'s" + "\" " + "location history: " + charLocHistory.getText());
+			System.out.println("\"" + charNameField.getText() + "'s" + "\" " + "knowledge history: " + charKnowHistory.getText());
 			
+			Character Char = new Character(charNameField.getText());
+			Char.setInventory(charInventory.getText());
+			Char.setLocHist(charLocHistory.getText());
+			Char.setMemory(charKnowHistory.getText());
+			
+			workingDir = workingDir + charNameField.getText();	//change working directory to the character directory
+			
+			try {
+				setupCharDir();
+			} catch (IOException e1) {
+				System.out.println("Unable to generate new directory!");
+				e1.printStackTrace();
+			}
+			
+			workingDir = baseDir;	//makes sure to reset the base directory because holy frick not doing this starts stacking stuff bad
+			
+			Char.writeToFiles();
+			//save protection to keep things from being overwritten on accident
+//			if(charExists = false) {
+//				Char.writeToFiles();
+//				System.out.println("Files saved");
+//			}
+//			else {
+//				System.out.println("No files saved");
+//			}
 		}
-		if(e.getSource() == addItem) {
+		
+		if(e.getSource() == load) {
+			LoadWindow load = new LoadWindow();
+			load.setVisible(true);
+		}
+		if(e.getSource() == about) {
+			AboutWindow about = new AboutWindow();
+			about.setVisible(true);
+		}
+	}
+	
+	public static String getProgramPath() {
+		String programDir = System.getProperty("user.dir");
+		return programDir;
+	}
+	
+	public static void setupDir() throws IOException {	
+		
+		System.out.println("\"" + workingDir + "\" " + "is the program's current working directory.");
+		
+		File tempDirectory = new File(workingDir);
+		if( !tempDirectory.exists() && !tempDirectory.isDirectory() ) { //run if the directory doesnt exist
+			System.out.println("Directory does not exist. Making directory...");
+			tempDirectory.mkdir();
+		}	
+		
+	}
+	
+	public static void setupCharDir() throws IOException {	
+		
+		System.out.println("\"" + workingDir + "\" " + "is the program's current working directory.");
+		
+		File tempDirectory = new File(workingDir);
+		if( !tempDirectory.exists() && !tempDirectory.isDirectory() ) { //run if the directory doesnt exist
+			System.out.println("Directory does not exist. Making directory...");
+			tempDirectory.mkdir();
+		}	
+		else {
+			System.out.println("Directory already exists. Work at your own peril!");
+//			WarningWindow warning = new WarningWindow();
+//			warning.setVisible(true);
+		}
+		
+	}
 
+	public static void loadCharacter() {
+		// TODO Auto-generated method stub
+		workingDir = workingDir + charNameField.getText();
+		System.out.println("\"" + workingDir + "\" " + "is the program's current working directory.");
+		
+		File tempDirectory = new File(workingDir);
+		if( !tempDirectory.exists() && !tempDirectory.isDirectory() ) { 
+			//do nothing
+		}	
+		else {
+			System.out.println("Character found! Now loading data...");
+			Character Char = new Character(charNameField.getText());
+			Char.readFromFiles();
+			charInventory.setText(Char.getInventory());
+			charLocHistory.setText(Char.getLocHist());
+			charKnowHistory.setText(Char.getMemory());
+			workingDir = baseDir;	//reset working directory again
 		}
 	}
 

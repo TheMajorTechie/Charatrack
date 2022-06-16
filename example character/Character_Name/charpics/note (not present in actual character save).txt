@@ -1,1 +1,0 @@
-multiple pictures may be placed in a character save, and the character sheet will allow you to look through them one by one.
